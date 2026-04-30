@@ -98,3 +98,35 @@ class DeliveryReport:
             f"Tasa de éxito: {self.success_rate():.0%} | "
             f"ID: {self.report_id}"
         )
+class NotificationService:
+    def __init__(self, channel: NotificationChannel):
+        self._channel = channel
+        self._history: list[str] = []
+
+    def send_notification(self, message: str) -> None:
+        if not self._channel.is_available():
+            raise ChannelUnavailableError(f"Canal '{self._channel.get_channel_name()}' no disponible.")
+        self._channel.send(message)
+        self._history.append(message)
+
+    def send_bulk(self, messages: list[str]) -> int:
+        delivered = 0
+        for message in messages:
+            try:
+                self.send_notification(message)
+                delivered += 1
+            except NotificationError:
+                continue
+        return delivered
+
+    def get_history(self) -> list[str]:
+        return self._history.copy()
+
+    def generate_report(self) -> DeliveryReport:
+        history = self.get_history()
+        return DeliveryReport(
+            channel_name=self._channel.get_channel_name(),
+            total_attempted=len(history),
+            total_delivered=len(history),
+            messages=list(history),
+        )
