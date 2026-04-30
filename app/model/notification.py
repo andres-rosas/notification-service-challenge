@@ -74,4 +74,27 @@ class MockChannel(NotificationChannel):
     def send(self, message: str) -> None:
         raise ChannelUnavailableError("MockChannel siempre está no disponible.")
 
+@dataclass
+class DeliveryReport:
+    channel_name: str
+    total_attempted: int
+    total_delivered: int
+    messages: list = field(default_factory=list)
+    report_id: str = field(default_factory=lambda: str(uuid.uuid4()))
 
+    def success_rate(self) -> float:
+        if self.total_attempted == 0:
+            return 0.0
+        return self.total_delivered / self.total_attempted
+
+    def is_empty(self) -> bool:
+        return self.total_delivered == 0
+
+    def __str__(self) -> str:
+        return (
+            f"DeliveryReport | Canal: {self.channel_name} | "
+            f"Intentados: {self.total_attempted} | "
+            f"Entregados: {self.total_delivered} | "
+            f"Tasa de éxito: {self.success_rate():.0%} | "
+            f"ID: {self.report_id}"
+        )
