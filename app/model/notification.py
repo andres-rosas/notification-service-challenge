@@ -51,6 +51,27 @@ class FileChannel(NotificationChannel):
     def is_available(self) -> bool:
         pass
 
+    def get_channel_name(self) -> str:
+        return f"file({self.file_path})"
 
+    def send(self, message: str) -> None:
+        if not self.is_available():
+            raise ChannelUnavailableError(f"No se puede escribir en: {self.file_path}")
+        try:
+            with open(self.file_path, "a", encoding="utf-8") as f:
+                f.write(message + "\n")
+        except IOError as e:
+            raise DeliveryError(f"Error al escribir en archivo: {e}") from e
+
+
+class MockChannel(NotificationChannel):
+    def is_available(self) -> bool:
+        return False
+
+    def get_channel_name(self) -> str:
+        return "mock"
+
+    def send(self, message: str) -> None:
+        raise ChannelUnavailableError("MockChannel siempre está no disponible.")
 
 
